@@ -1,0 +1,7 @@
+*.retry
+.vault_pass
+.vscode/
+.idea/
+.DS_Store
+*.log
+__pycache__/
