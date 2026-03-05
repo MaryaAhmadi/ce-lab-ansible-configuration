@@ -1,0 +1,17 @@
+[Unit]
+Description=Prometheus Node Exporter
+After=network-online.target
+
+[Service]
+User=monitoring
+Group=monitoring
+Type=simple
+ExecStart=/usr/local/bin/node_exporter \
+  --web.listen-address=:{{ monitoring_port }} \
+  --web.telemetry-path={{ monitoring_metrics_path }}
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+

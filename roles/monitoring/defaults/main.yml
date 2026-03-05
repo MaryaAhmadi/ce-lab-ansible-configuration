@@ -1,0 +1,7 @@
+---
+monitoring_agent: "node_exporter"
+monitoring_version: "1.7.0"
+monitoring_port: 9100
+monitoring_metrics_path: "/metrics"
+monitoring_scrape_interval: "15s"
+
