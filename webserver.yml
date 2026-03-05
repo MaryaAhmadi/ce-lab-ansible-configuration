@@ -1,0 +1,66 @@
+---
+- name: Configure web server
+  hosts: localhost
+  become: true
+  gather_facts: true
+
+  vars:
+    vhost_port: 8080          #
+    document_root: "/var/www/{{ app_name }}"
+    nginx_conf_dir: "/opt/homebrew/etc/nginx/servers"
+
+  tasks:
+
+    - name: Ensure nginx is installed via Homebrew
+      ansible.builtin.homebrew:
+        name: nginx
+        state: present
+      become: false
+
+    - name: Ensure nginx servers directory exists
+      ansible.builtin.file:
+        path: "{{ nginx_conf_dir }}"
+        state: directory
+        mode: "0755"
+
+    - name: Create document root
+      ansible.builtin.file:
+        path: "{{ document_root }}"
+        state: directory
+        owner: "{{ ansible_user_id }}"
+        group: staff
+        mode: "0755"
+
+    - name: Deploy custom index page
+      ansible.builtin.template:
+        src: roles/webserver/templates/index.html.j2
+        dest: "{{ document_root }}/index.html"
+        owner: "{{ ansible_user_id }}"
+        group: staff
+        mode: "0644"
+      notify: Reload nginx
+
+    - name: Configure nginx site
+      ansible.builtin.copy:
+        dest: "{{ nginx_conf_dir }}/{{ app_name }}.conf"
+        mode: "0644"
+        content: |
+          server {
+              listen {{ vhost_port }};
+              server_name localhost;
+              root {{ document_root }};
+              index index.html;
+
+              location / {
+                  try_files $uri $uri/ =404;
+              }
+
+              access_log /opt/homebrew/var/log/nginx/{{ app_name }}_access.log;
+              error_log  /opt/homebrew/var/log/nginx/{{ app_name }}_error.log;
+          }
+      notify: Reload nginx
+
+  handlers:
+    - name: Reload nginx
+      ansible.builtin.command: brew services restart nginx
+      become: false
